@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • User</title>
+  <style>
+    :root { --bg:#0b1020; --card:#131a2a; --text:#e9edf5; --muted:#aab3c5; --accent:#7aa2ff; --error:#ff6b6b; }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:linear-gradient(180deg,#0a0f1f,#0b1226 40%,#0a0f1f);color:var(--text);min-height:100svh;display:grid;place-items:center;padding:24px}
+    .card{width:100%;max-width:480px;background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+    header{padding:22px 24px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;gap:12px;align-items:center}
+    header .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#9bd3ff);display:grid;place-items:center;color:#0b1020;font-weight:900}
+    header h1{font-size:18px;line-height:1.2;margin:0}
+    header p{margin:2px 0 0;color:var(--muted);font-size:12px}
+    form{padding:22px 24px;display:grid;gap:14px}
+    .field{display:grid;gap:8px}
+    label{font-size:13px;color:var(--muted)}
+    input[type="text"],input[type="email"],input[type="password"]{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0f1628;color:var(--text);outline:none}
+    input::placeholder{color:#7f8aa5}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .check{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#0e1526}
+    .actions{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:8px}
+    button{appearance:none;border:0;background:var(--accent);color:#0b1020;font-weight:700;padding:12px 16px;border-radius:12px;cursor:pointer}
+    button:active{transform:translateY(1px)}
+    .hint{font-size:12px;color:var(--muted)}
+    .sep{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
+    .small{font-size:11px;color:#8fa0c2}
+    code{background:#0d1426;border:1px solid rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header>
+      <div class="logo">U</div>
+      <div>
+        <h1>Iniciar sesión</h1>
+        <p>Los datos se enviarán como JSON al endpoint <code>/users/token</code></p>
+      </div>
+    </header>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="name">Nombre de usuario (name)</label>
+        <input id="name" name="name" type="text" placeholder="tu_usuario" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label for="email">Correo electrónico (email)</label>
+        <input id="email" name="email" type="email" placeholder="tu@email.com" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+
+      <div class="row">
+        <label class="check">
+          <input type="checkbox" id="disabled" name="disabled" />
+          <span>Cuenta deshabilitada (disabled)</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="is_online" name="is_online" checked />
+          <span>Marcar en línea (is_online)</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <span class="hint">Se enviará como <code>application/json</code></span>
+        <button type="submit">Entrar</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const dataObj = {
+  grant_type: "password",
+  username: document.getElementById("username").value,
+  password: document.getElementById("password").value,
+  scope: "",
+  client_id: "",
+  client_secret: "",
+  is_online: document.getElementById("is_online").checked
+};
+
+// Convertir a URLSearchParams para enviar x-www-form-urlencoded
+const formBody = new URLSearchParams(dataObj);
+
+
+      try {
+        const response = await fetch("/users/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(dataObj)
+        });
+
+        const result = await response.json();
+        console.log("Respuesta del servidor:", result);
+        alert("Login exitoso: " + JSON.stringify(result));
+      } catch (err) {
+        console.error("Error en login:", err);
+        alert("Error en login");
+      }
+    });
+  </script>
+</body>
+</html>

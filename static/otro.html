@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />  
+</head>
+<body>
+  <main class="card" role="main">
+    <header>
+      <div class="logo">U</div>
+      <div>
+        <h1>Registro de usuario</h1>
+        <p>Campos alineados al modelo <code>User</code></p>
+      </div>
+    </header>
+
+    <!--
+      Este formulario permite registrar un usuario según el modelo User.
+      Ajusta el atributo `action` a tu endpoint real, ej: /users/register
+    -->
+    <form method="post" action="/users/register">
+      <div class="field">
+        <label for="name">Nombre de usuario (name)</label>
+        <input id="name" name="name" type="text" placeholder="elige un usuario" autocomplete="username" required />
+      </div>
+
+      <div class="field">
+        <label for="email">Correo electrónico (email)</label>
+        <input id="email" name="email" type="email" placeholder="tu@email.com" autocomplete="email" required />
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña (hashed_password)</label>
+        <input id="password" name="hashed_password" type="password" placeholder="••••••••" autocomplete="new-password" required />
+      </div>
+
+      <div class="row">
+        <label class="check">
+          <input type="checkbox" name="disabled" value="true" />
+          <span>Cuenta deshabilitada (disabled)</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="is_online" value="true" checked />
+          <span>Marcar en línea (is_online)</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <span class="hint">Los datos se enviarán como <code>application/x-www-form-urlencoded</code></span>
+        <button type="submit">Registrar</button>
+      </div>
+
+      <div class="sep"></div>
+      <p class="small">
+        Al registrar aceptas nuestros términos de servicio y política de privacidad.
+      </p>
+    </form>
+  </main>
+</body>
+</html>
+
+
+<script>
+    document.getElementById('LoginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const response = await fetch('/users/token/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      alert('Registered: ' + response.status);
+    });
+  </script>
+</body>
+</html> 

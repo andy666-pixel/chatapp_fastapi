@@ -1,0 +1,350 @@
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from routers.user import app as user_router
+
+app = FastAPI()
+
+app.include_router(user_router, prefix="/users", tags=["Users"])
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
+
+
+
+from sqlmodel import Session, create_engine
+from typing import Annotated
+from fastapi import Depends, APIRouter
+
+
+#Database creation and connection
+#//---------------------------------------------------------------------------------------------------------//#
+
+
+router = APIRouter()
+
+# db/init_db.py
+
+from sqlmodel import Session, create_engine
+from typing import Generator
+
+DATABASE_URL = "postgresql://andy:Parrotkali1234_@localhost:5432/chatapp"
+
+# Crear el motor de base de datos
+engine = create_engine(DATABASE_URL, echo=True)
+
+# Función de dependencia para inyectar la sesión en FastAPI
+def get_session() -> Generator[Session, None, None]:
+    with Session(engine) as session:
+        yield session
+
+# Esto es lo que usarás en tus rutas
+SessionDep = get_session
+
+
+#//---------------------------------------------------------------------------------------------------------//#
+#Database creation and connection
+
+
+
+from datetime import datetime
+from fastapi import APIRouter
+from sqlmodel import Field, SQLModel
+from fastapi import APIRouter
+
+router = APIRouter()
+
+
+class Message(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    content: str
+    sender_id: int 
+    receiver_id: int 
+    timestamp: datetime.date
+
+
+
+from typing import Optional
+from fastapi import APIRouter
+from sqlmodel import Field, SQLModel
+
+router = APIRouter()
+
+
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)  # nombre de usuario único para login
+    email: str = Field(index=True, unique=True)
+    hashed_password: str
+    disabled: bool = Field(default=False)
+    is_online: bool = Field(default=False)
+
+
+from sqlmodel import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlmodel import Session
+from models.user import User  
+from db.init_db import SessionDep, get_session
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from jose import JWTError, jwt
+
+app = APIRouter()
+
+SECRET_KEY = "80e449821b1fcc8136643c4e4012c89eeb1e28db5ea3d005dafec07ba3dd4b35"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 90
+
+oauth_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: str | None = None  # Aquí "username" es el nombre de usuario, puedes dejar así para no cambiar todo
+
+
+class UserInDB(User):
+    hashed_password: str
+
+
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return password_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    return password_context.hash(password)
+
+
+def get_user(db: Session, name: str):
+    statement = select(User).where(User.name == name)
+    user = db.exec(statement).first()
+    if user:
+        return UserInDB(**user.dict())
+    return None
+
+
+def authenticate_user(db: Session, name: str, password: str):
+    user = get_user(db, name)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(SessionDep)]
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        name = payload.get("sub")
+        if name is None:
+            raise credentials_exception
+        token_data = TokenData(username=name)  # Aquí 'username' contiene el valor de 'name'
+    except JWTError:
+        raise credentials_exception
+    user = get_user(db, name=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    if getattr(current_user, "disabled", False):
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
+@app.post("/register/")
+def create_user(user: User, session: Session = Depends(SessionDep)):
+    hashed_password = get_password_hash(user.password)
+    user.hashed_password = hashed_password
+    # Opcionalmente puedes eliminar la contraseña plana antes de guardar
+    if hasattr(user, "password"):
+        delattr(user, "password")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+@app.get("/home/me")
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    return current_user
+
+
+@app.post("/token")
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Annotated[Session, Depends(SessionDep)],
+) -> Token:
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.name}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+
+router = APIRouter()
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Websocket Demo</title>
+           <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    </head>
+    <body>
+    <div class="container mt-3">
+        <h1>FastAPI WebSocket Chat</h1>
+        <h2>Your ID: <span id="ws-id"></span></h2>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" class="form-control" id="messageText" autocomplete="off"/>
+            <button class="btn btn-outline-primary mt-2">Send</button>
+        </form>
+        <ul id='messages' class="mt-5">
+        </ul>
+        
+    </div>
+    
+        <script>
+            var client_id = Date.now()
+            document.querySelector("#ws-id").textContent = client_id;
+            var ws = new WebSocket(`ws://localhost:8000/ws/${client_id}`);
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+"""
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+    
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+    
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+    
+manager = ConnectionManager()
+
+
+@router.get("/")
+async def get():
+    return HTMLResponse(html)
+
+
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    await manager.connect(websocket)
+    try: 
+        while True:
+            data = await websocket.receive_text()
+            await manager.send_personal_message(f"You wrote: {data}", websocket)
+            await manager.broadcast(f"Client #{client_id} says: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+ 
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; }
+    input { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Register</h2>
+  <form id="registerForm">
+    <input type="text" placeholder="Name" name="name" required>
+    <input type="password" placeholder="Password" name="password" required>
+    <input type="email" placeholder="Email" name="email" required>
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const response = await fetch('/users/register/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      alert('Registered: ' + response.status);
+    });
+  </script>
+</body>
+</html>

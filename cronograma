@@ -1,0 +1,95 @@
+Cronograma
+4 de agosto
+Duración sugerida: 4 horas
+
+Setup del entorno
+
+Crear estructura base de carpetas
+
+Definir endpoints básicos de la ChatApp
+
+Instalar dependencias necesarias
+
+ 5 de agosto
+Duración sugerida: 4 horas
+
+Implementar lógica básica de conexión WebSocket (connect, disconnect, broadcast)
+
+Crear backend funcional sin frontend aún
+
+ 6 de agosto
+Duración sugerida: 3 horas
+
+Pruebas locales del WebSocket con websocat o JavaScript simple
+
+Mejorar diseño de eventos (mensajes, alertas de conexión, etc.)
+
+ 7 de agosto
+Duración sugerida: 4 horas
+
+Implementar modelos Pydantic para usuarios y mensajes
+
+Añadir seguridad simple: autenticación por token dummy
+
+8 de agosto
+Duración sugerida: 4 horas
+
+Añadir registro e inicio de sesión
+
+Crear pruebas unitarias simples (pytest o httpx)
+
+Documentación OpenAPI funcional
+
+ 9 de agosto
+Duración sugerida: 3 horas
+
+Añadir cifrado de contraseñas (hashlib + salt)
+
+Middleware para autorización
+
+10 de agosto
+Duración sugerida: 4 horas
+
+Dockerizar la aplicación (Dockerfile, docker-compose)
+
+Pruebas locales de la imagen y contenedor
+
+ 11 de agosto
+Duración sugerida: 4 horas
+
+Comenzar a diseñar la CI/CD (GitHub Actions)
+
+Linting, pruebas y build automatizado
+
+ 12 de agosto
+Duración sugerida: 3 horas
+
+Añadir escaneo de vulnerabilidades (ej. Trivy, Bandit)
+
+Integrar un pipeline básico DevSecOps
+
+ 13 de agosto
+Duración sugerida: 3 horas
+
+Añadir despliegue automatizado con docker-compose o railway/vercel
+
+Documentar el flujo de la pipeline
+
+ 14 de agosto
+Duración sugerida: 4 horas
+
+Hacer pruebas completas E2E
+
+Pulir errores y revisar seguridad
+
+Añadir monitoreo simple (logs o consola)
+
+ 15 de agosto
+Duración sugerida: 3 horas
+
+Documentación completa del proyecto
+
+Subir a GitHub como repositorio final
+
+Crear video corto o demo como presentación final (opcional)
+

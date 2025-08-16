@@ -1,0 +1,146 @@
+Gracias por el resumen tan completo — lo tienes súper bien planteado 👏. Como ya tienes la **estructura**, el **cronograma diario**, y los **requerimientos**, lo que necesitas ahora es una **versión refinada de tu plan diario** teniendo en cuenta:
+
+1. No trabajas los fines de semana (10 días hábiles: del 4 al 15 de agosto, sin 10 y 11).
+2. Es un proyecto serio, con testing, CI/CD y DevSecOps.
+3. Necesitas terminarlo **funcional, documentado y subido a GitHub** el 15.
+
+---
+
+## 📅 **Plan Diario Final (Revisado y Balanceado)**
+
+---
+
+### 🗓 **Lunes 4 de agosto — Setup**
+
+⏱ **Duración sugerida: 4h**
+
+* Crear estructura de carpetas y archivos base.
+* Inicializar Git, crear `.env`, `.gitignore`, y `requirements.txt`.
+* Instalar dependencias mínimas (FastAPI, Tortoise, etc.).
+* Definir endpoints iniciales de usuario y auth en `routers/`.
+
+🧠 *Meta*: Que el proyecto corra localmente con Hello World y estructura clara.
+
+---
+
+### 🗓 **Martes 5 de agosto — WebSocket y Chat básico**
+
+⏱ **Duración sugerida: 4h**
+
+* Implementar WebSocket con rutas de conexión.
+* Crear `chat.py` en `services/` y `routers/`.
+* Lógica de connect/disconnect/broadcast.
+* Sin frontend aún, pero dejarlo funcional.
+
+🧠 *Meta*: Backend escucha conexiones y responde a mensajes.
+
+---
+
+### 🗓 **Miércoles 6 de agosto — Pruebas WebSocket y eventos**
+
+⏱ **Duración sugerida: 3h**
+
+* Probar conexión usando `websocat` o JS.
+* Añadir estructura para eventos: mensaje, join, leave, etc.
+* Iniciar modelos Pydantic para mensaje.
+
+🧠 *Meta*: WebSocket responde y procesa tipos de mensajes.
+
+---
+
+### 🗓 **Jueves 7 de agosto — Modelos, DB y autenticación dummy**
+
+⏱ **Duración sugerida: 4h**
+
+* Modelos Pydantic y ORM (User, Message) en `models/`.
+* Setup Tortoise con PostgreSQL y `init_db.py`.
+* Autenticación dummy con token fijo.
+
+Se puede simular login con token simple, DB funciona.
+
+---
+ **Viernes 8 de agosto — Registro, login y tests básicos**
+
+⏱ **Duración sugerida: 4h**
+
+* Endpoints POST `/register`, `/login`.
+* Usar `passlib` para hash de contraseña.
+* Test de endpoints con `pytest` o `httpx`.
+
+🧠 *Meta*: Se puede registrar/loguear usuarios reales, y testearlo.
+
+---
+
+⛔ **Sábado 9 - Domingo 10 → Descanso (No programar)**
+
+---
+
+**Lunes 11 de agosto — Middleware, hashing y seguridad**
+
+**Duración sugerida: 4h**
+
+* Middleware para validar token JWT en cada ruta protegida.
+* Usar `bcrypt` o `passlib` correctamente.
+* Proteger rutas de chat y usuario.
+
+*Meta*: Seguridad básica implementada en el flujo completo.
+
+---
+
+### **Martes 12 de agosto — Docker y CI inicial**
+
+**Duración sugerida: 4h**
+
+* Crear `Dockerfile` y `docker-compose.yml`.
+* Ver que FastAPI + PostgreSQL se levanten correctamente.
+* Crear `.github/workflows/ci-cd.yml` básico con `pytest`, `ruff`, etc.
+
+ *Meta*: Proyecto corre en Docker y CI empieza a validarse.
+
+---
+
+### 🗓 **Miércoles 13 de agosto — DevSecOps básico**
+
+⏱ **Duración sugerida: 3h**
+
+* Integrar Bandit, Trivy, pip-audit en CI.
+* Añadir scripts en Makefile o comandos manuales.
+* Crear readme con pasos de seguridad automatizados.
+
+🧠 *Meta*: CI analiza código y dependencias, pruebas automáticas corren.
+
+---
+
+### 🗓 **Jueves 14 de agosto — Deploy y refinamiento**
+
+⏱ **Duración sugerida: 4h**
+
+* Despliegue en Railway, Render o VPS local con Docker.
+* Test de mensajes E2E.
+* Revisión general: errores, seguridad, logs.
+
+🧠 *Meta*: App desplegada, funcional y estable.
+
+---
+
+**Viernes 15 de agosto — Entrega**
+
+**Duración sugerida: 3h**
+
+Documentación completa en `README.md` (uso, estructura, seguridad, CI).
+Subir a GitHub, limpiar ramas si hay.
+(Opcional) Grabar demo o capturas de uso.
+
+Entrega final lista y bien presentada.
+
+---
+| Tema             | Consejo Rápido                                |
+| ---------------- | --------------------------------------------- |
+| 🧪 Pruebas       | Usa SQLite como DB de testing                 |
+| 🐳 Docker        | Usa volumen persistente para Postgres         |
+| 🔒 JWT           | Usa tiempo de expiración, almacena en `.env`  |
+| 🧹 Limpieza      | Revisa logs, print innecesarios, errores HTML |
+| 🛠️ CI/CD        | Empieza simple: instalar, test, lint, audit   |
+| 📚 Documentación | README con resumen técnico + pasos de uso     |
+
+
