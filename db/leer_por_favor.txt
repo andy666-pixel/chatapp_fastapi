@@ -1,0 +1,31 @@
+Pasos para inicializar la base de datos despues de migracion
+
+
+Primero accede a la consola de psql como superuser (por default el superuser es postgres)
+   1. psql -U postgres -w 
+
+
+Segundo crear el usuario andy
+   1. CREATE USER andy WITH PASSWORD 'contraseña_especificada_en_el_.env';
+
+
+Tercero crear la base de datos chatapp y darle un dueño
+   1. CREATE DATABASE chatapp OWNER andy;
+
+
+Cuarto conectarse a la base de datos chatapp
+  1. \c chatapp
+
+
+Quinto darle permisos totales a andy sobre el schema public para un correcto funcionamiento 
+  1. GRANT ALL PRIVILEGES ON SCHEMA public TO andy;
+  2. ALTER SCHEMA public OWNER TO andy;
+
+
+Sexto darle a andy permisos totales totalitarios en la bd 
+  1. GRANT ALL PRIVILEGES ON DATABASE mi_base TO andy;
+  2. \q
+
+
+Ultimo cargar el archivo DB.sql
+  1. psql -U andy -W -h localhost -d chatapp -f DB.sql
